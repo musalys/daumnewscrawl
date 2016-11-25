@@ -1,2 +1,2 @@
 # daumnewscrawl
-practicing news crawling and using mongo db
+practicing news crawling and mongo db 
