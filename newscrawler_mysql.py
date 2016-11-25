@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
+
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+import datetime
 import requests
+import json
 import re
 from bs4 import BeautifulSoup
 #from newsdao import NewsDAO
+
+# Mysql용 크롤러
+
 
 class Daum_News_Crawler(object):
 
@@ -14,44 +20,50 @@ class Daum_News_Crawler(object):
         self.newsdao = newsdao
         self.url = url
 
-
-    def get_topic_links(self):
+    def get_topics(self):
 
         res = requests.get(self.url)
         content = res.content
         soup = BeautifulSoup(content)
 
-        soup_1 = soup.find_all('li')
+        soup_1 = soup.find_all('a', attrs={'class': 'link_gnb'})
 
-        for i in range(4,10):
-            try:
-                if 'link_gnb' in soup_1[i].a['class']:
-                    topic_urls = self.url + soup_1[i].a['href'][1:]
-                    self.get_links(topic_urls)
-            except Exception as e:
-                print 'e'
+        topic_list_raw = []
 
+        for soup_i in soup_1:
+            topic_list_raw.append('http://media.daum.net/'+soup_i['href'][1:])
+            #print soup_i['href']
+
+        topic_lists = topic_list_raw[1:7]
+
+        self.get_links(topic_lists)
+
+
+    '''
+        below is the method that crawl several news links in each topic.
+    '''
 
     def get_links(self, urls):
 
-        res = requests.get(urls)
-        content = res.content
-        soup = BeautifulSoup(content)
+        for url in urls:
 
-        try:
-            soup_1 = soup.find('ul', attrs = {'class' : 'list_news'})
-            soup_2 = soup_1.find_all('a', attrs = {'class' : 'link_txt'})
+            res = requests.get(url)
+            content = res.content
+            soup = BeautifulSoup(content)
+
+            soup_1 = soup.find('ul', attrs={'class': 'list_news'})
+            soup_2 = soup_1.find_all('a', attrs={'class': 'link_txt'})
 
             for k in soup_2:
                 if 'http' in k['href']:
                     #print k['href']
                     link = k['href']
-                    #print link
                     self.crawl_title_content(link)
 
-        except Exception as e:
-            print 'e1'
-
+    '''
+        below is the method that crawl each article's title, content and written time.
+        and save them in mysql.
+    '''
 
     def crawl_title_content(self, link):
 
@@ -60,33 +72,31 @@ class Daum_News_Crawler(object):
         soup = BeautifulSoup(content)
 
         try:
-
-            title = soup.find('h3', attrs = {'class' : 'tit_view'}).get_text().strip()
-            #title = re.sub(r'^[*]', '', title)
-            content = soup.find('div', attrs = {'id' : 'harmonyContainer'}).get_text().strip()
-            #content = re.sub(r'^\[*\]', '', content)
-            written_time = soup.find('span', attrs = {'class' : 'txt_info'}).get_text().strip()
-            #written_time = re.sub(r'^...', '', written_time)
+            title = soup.find('h3', attrs={'class': 'tit_view'}).get_text().strip()
+            content = soup.find('div', attrs={'id': 'harmonyContainer'}).get_text().strip()
+            written_time1 = soup.find('span', attrs={'class': 'info_view'}).get_text().strip()
+            written_time1 = re.search(r'2\d+.\d+.\d+\s.*', written_time1)
+            written_time = written_time1.group()
+            #written_time2 = datetime.datetime.strptime(written_time.group().split('.'))
 
         except Exception as e:
-            print 'e2'
+            print '1', e
 
-        print link
-        print title
-        print written_time
-        #self.newsdao.save_news(link, title, content, written_time)
+        try:
+            print link
+            print str(title)
+            print written_time
+            print str(content)
 
-        #print title
-        #print
-        #print written_time
-        #print
-        #print content
-        #print
+            #save above things in Mysql(link, title, written_time, content), links are a primary key.
+            #self.newsdao.save_news(link, str(title), str(content), written_time)
 
+        except Exception as e1:
+            print '2', e1
 
-url = 'http://media.daum.net/'
-newsdao = 'kit'#NewsDAO()
-#link1 = 'http://v.media.daum.net/v/20161022094104633'
+urls = 'http://media.daum.net/'
 
-crawler = Daum_News_Crawler(newsdao, url)
-crawler.get_topic_links()
+newsdao = 'kit'
+crawl = Daum_News_Crawler(urls, newsdao)
+
+crawl.get_topics()

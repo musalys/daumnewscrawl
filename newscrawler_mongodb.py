@@ -9,7 +9,6 @@ import requests
 import json
 import re
 from bs4 import BeautifulSoup
-from pymongo import MongoClient
 from newsdao_mongodb import NewsDAO
 
 # MongoDB용 크롤러
