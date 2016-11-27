@@ -11,7 +11,7 @@ import re
 from bs4 import BeautifulSoup
 from newsdao_mongodb import NewsDAO
 
-# MongoDB용 크롤러
+# Daum News Crawler using Mongo DB
 
 
 class Daum_News_Crawler(object):
@@ -47,7 +47,6 @@ class Daum_News_Crawler(object):
 
         self.get_links(topic_lists)
 
-
     '''
         below is the method that crawl several news links in each topic.
     '''
@@ -70,8 +69,8 @@ class Daum_News_Crawler(object):
                     self.crawl_title_content(link)
 
     '''
-        below is the method that crawl each article's title, content and written time.
-        and save them in mongo db.
+        below is the method that crawl each article's title,
+        content and written time. And save them in mongo db.
     '''
 
     def crawl_title_content(self, link):
@@ -86,7 +85,7 @@ class Daum_News_Crawler(object):
             written_time1 = soup.find('span', attrs={'class': 'info_view'}).get_text().strip()
             written_time1 = re.search(r'2\d+.\d+.\d+\s.*', written_time1)
             written_time = written_time1.group()
-            #written_time2 = datetime.datetime.strptime(written_time.group().split('.'))
+            written_time = datetime.datetime.strptime(written_time, "%Y.%m.%d %H:%M")
 
         except Exception as e:
             print '1', e
@@ -94,7 +93,7 @@ class Daum_News_Crawler(object):
         try:
             print link
             print str(title)
-            print written_time
+            print type(written_time), written_time
             print str(content)
 
             #save above things in mongo db(link, title, written_time, content), links are a primary key.

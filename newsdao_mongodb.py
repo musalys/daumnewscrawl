@@ -12,9 +12,9 @@ from bs4 import BeautifulSoup
 from pymongo import MongoClient
 
 
-#아마존 웹서버의 몽고 DB의 news db에 연결
+# connect to aws ec2 mongo db server
 
-server = 'ec2-35-164-25-57.us-west-2.compute.amazonaws.com'
+server = 'server'
 mongo = MongoClient(server, 27017)
 news = mongo.daum.news
 
@@ -26,7 +26,49 @@ class NewsDAO(object):
 
     def save_news(self, link, title, content, written_time, crawl_time=datetime.datetime.now()):
 
-        news.update_one({'link' : link}, {'$set' : {'title' : title, 'content' : content, 'written_time' : written_time, 'crawl_time': crawl_time}}, upsert=True)
+        # if the article's link is in mongo DB's collections
+        news.update_one({'link': link}, {'$set': {'title': title, 'content': content, 'written_time': written_time, 'crawl_time': crawl_time}}, upsert=True)
 
-    def get_recent_news_by_id(self, link):
+    def get_news_by_id(self, link):
         pass
+
+    def get_news_by_keyword_in_content(self, keyword):
+
+        '''
+            db.news.aggregate([ {$match : { $text: {$search : "keyword"}}}])
+        '''
+        news.create_index([('content', 'text')])
+        pipelines = []
+        pipelines.append({"$match": {"$text": {"$search": keyword}}})
+        result = news.aggregate(pipelines)
+
+        data = []
+
+        for doc in result:
+            articles = {}
+            articles['title'] = doc['title']
+            articles['link'] = doc['link']
+            articles['content'] = doc['content']
+            articles['written_time'] = doc['written_time']
+            #articles['crawl_time'] = datetime.datetime.strftime(doc['crawl_time'], "%Y-%m-%d %H:%M:%S")
+
+            data.append(articles)
+
+        # print data
+        return data
+
+# '''
+#     db.news.aggregate([ {$match : { $text: {$search : "keyword"}}}])
+# '''
+# news.create_index([('content','text')])
+# pipelines=[]
+# pipelines.append({"$match" : {"$text": {"$search": "아이폰"}}})
+# result = news.aggregate(pipelines)
+#
+# data = []
+#
+# for doc in result:
+#     data.append(doc)
+#
+# print len(data), data
+# return data

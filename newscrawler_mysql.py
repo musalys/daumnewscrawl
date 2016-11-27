@@ -11,7 +11,7 @@ import re
 from bs4 import BeautifulSoup
 #from newsdao import NewsDAO
 
-# Mysql용 크롤러
+# Crawler using Mysql
 
 
 class Daum_News_Crawler(object):
