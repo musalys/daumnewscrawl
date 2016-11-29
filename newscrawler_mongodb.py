@@ -10,17 +10,19 @@ import json
 import re
 from bs4 import BeautifulSoup
 from newsdao_mongodb import NewsDAO
+from memcache import MemCache
 
 # Daum News Crawler using Mongo DB
 
 
 class Daum_News_Crawler(object):
 
-    def __init__(self, urls, newsdao):
+    def __init__(self, urls, newsdao, memcache):
         self.urls = urls
         self.newsdao = newsdao
+        self.memcache = memcache
 
-    ''' below is the getting daum news topic links
+    ''' below is the parsing daum news topic links
         'http://media.daum.net/digital/'
         'http://media.daum.net/society/'
         'http://media.daum.net/politics/'
@@ -97,14 +99,17 @@ class Daum_News_Crawler(object):
             print str(content)
 
             #save above things in mongo db(link, title, written_time, content), links are a primary key.
-            self.newsdao.save_news(link, str(title), str(content), written_time)
+            if self.newsdao.save_news(link, str(title), str(content), written_time):
+                self.memcache.cache_news(str(title), str(content))
 
         except Exception as e1:
             print '2', e1
 
 urls = 'http://media.daum.net/'
 
-newsdao = NewsDAO()
-crawl = Daum_News_Crawler(urls, newsdao)
+if __name__ == '__main__':
+    memcache = MemCache()
+    newsdao = NewsDAO()
 
-crawl.get_topics()
+    crawler = Daum_News_Crawler(urls, newsdao, memcache)
+    crawler.get_topics()

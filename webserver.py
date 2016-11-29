@@ -8,7 +8,7 @@ import uuid
 from flask import Flask, jsonify, request, json, Response
 from newsdao_mongodb import NewsDAO
 #from commentdao import CommentDAO
-#from memcache import MemCache
+from memcache import MemCache
 
 from konlpy.tag import Kkma
 
@@ -45,12 +45,12 @@ def search_news(keyword):
     return jsonify(data)
 
 
-# @app.route('/news/recent')
-# def get_recent_10():
-#     memcache = MemCache()
-#     cached = memcache.get_cached_news()
-#
-#     return jsonify(cached)
+@app.route('/news/recent')
+def get_recent_10():
+    newsdao = NewsDAO()
+    data = newsdao.get_recent_news()
+
+    return jsonify(data)
 #
 # # 연습문제 1
 # @app.route('/news/top5')
