@@ -48,7 +48,8 @@ def search_news(keyword):
 @app.route('/news/recent')
 def get_recent_10():
     newsdao = NewsDAO()
-    data = newsdao.get_recent_news()
+    memcache = MemCache()
+    data = memcache.get_cached_news()
 
     return jsonify(data)
 #
