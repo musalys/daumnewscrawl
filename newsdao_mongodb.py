@@ -82,20 +82,20 @@ class NewsDAO(object):
         pipelines.append({'$project': {'link': '$link', 'title': '$title', 'content': '$content', 'written_time': '$written_time', 'crawl_time': '$crawl_time', 'dateDifference': {'$subtract' : [ now, '$written_time']}}})
         pipelines.append({'$match': {'dateDifference': {'$lte': 1000 * 60 * 60 * 24 * days }}})
         pipelines.append({'$sort': {'dateDifference': 1}})
-        pipelines.append({'$limit': 10})
+        # pipelines.append({'$limit': 10})
 
         result = news.aggregate(pipelines)
 
         data = []
 
         for doc in result:
-            articles = {}
-            articles['link'] = doc['link']
-            articles['title'] = doc['title']
-            articles['content'] = doc['content']
+            # articles = {}
+            # articles['link'] = doc['link']
+            # articles['title'] = doc['title']
+            # articles['content'] = doc['content']
             # articles['written_time'] = doc['written_time']
             # articles['crawl_time'] = doc['crawl_time']
-            data.append(articles)
+            data.append(doc['link'])
 
         return data
 # '''
